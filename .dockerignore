@@ -1,0 +1,18 @@
+# Both images build from the repo root, because backend and frontend import shared/types.ts.
+**/node_modules
+**/dist
+.git
+**/*.log
+
+# Installed inside the image for the platform it runs on, never copied in
+**/.vite
+**/coverage
+
+# Local settings and data: the container gets its own through docker compose
+**/.env
+**/.env.*
+data/
+**/*.db
+
+README.md
+Arch.md

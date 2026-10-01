@@ -9,3 +9,7 @@ globalThis.ResizeObserver ??= class {
   unobserve() {}
   disconnect() {}
 }
+
+// jsdom has no canvas either, and complains loudly every time one is asked for. The map asks for WebGL
+// to decide whether it can draw tiles at all, and "no" is the right answer here — it just says so quietly.
+HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext

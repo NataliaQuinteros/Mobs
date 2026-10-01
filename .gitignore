@@ -1,0 +1,5 @@
+# Map tile archives: hundreds of MB, rebuilt with "pmtiles extract" (see README)
+*.pmtiles
+
+# Where docker compose looks for places.db
+data/

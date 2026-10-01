@@ -1,0 +1,51 @@
+# The whole app: the API, and nginx serving the built page and passing /api through to it.
+#   docker compose up --build   →   http://localhost:8080
+services:
+  backend:
+    build:
+      context: . # the repo root, because both apps import shared/types.ts
+      dockerfile: backend/Dockerfile
+    environment:
+      PORT: 3001
+      # OpenStreetMap asks every app to say what it is and how to reach whoever runs it.
+      USER_AGENT: ${USER_AGENT:-WorkRadar/0.1 (set-your-email@example.com)}
+      MAX_RADIUS_KM: ${MAX_RADIUS_KM:-10}
+      MAX_SITES: ${MAX_SITES:-100}
+      SITE_TIMEOUT_MS: ${SITE_TIMEOUT_MS:-4000}
+      # false skips the headless browser: no jobs from JavaScript-built lists, but about three times faster.
+      RENDER_JS: ${RENDER_JS:-true}
+      # Falls back to the public Overpass API when the file is not there.
+      PLACES_DB: /data/places.db
+    volumes:
+      # Where scripts/import-places.ts wrote places.db. An empty or missing folder is fine.
+      - ${PLACES_DIR:-./data}:/data:ro
+    ports:
+      - '127.0.0.1:3001:3001' # the page does not need this; it is for calling the API yourself
+    ipc: host # Chromium outgrows the 64 MB /dev/shm a container gets by default
+    init: true # so a browser that dies does not leave zombie processes behind
+    healthcheck:
+      # There is no health route: a posting request without a url answers 400 straight away,
+      # which proves the server is up without reaching out to the internet.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/api/posting').then(r => process.exit(r.status === 400 ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        # Your own .pmtiles archive, if you host one. Empty means OpenFreeMap's hosted tiles.
+        VITE_PMTILES_URL: ${VITE_PMTILES_URL:-}
+    ports:
+      - '${WEB_PORT:-8080}:80'
+    depends_on:
+      - backend # only for start order: nginx needs the name to resolve when it starts
+    restart: unless-stopped

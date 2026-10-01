@@ -4,6 +4,7 @@ export type JobPosting = {
   title: string
   url: string
   location?: string
+  postedAt?: string // when the advert went up (yyyy-mm-dd), when the site says; undated postings are of unknown age
 }
 
 export type Business = {
@@ -14,7 +15,18 @@ export type Business = {
   lon: number
   distanceKm: number
   careersUrl: string
-  postings: JobPosting[] // empty when the careers page couldn't be parsed
+  postings: JobPosting[] // open positions we could read
+  cvUrl?: string // where to send a CV when there is a form or an address for open applications
+}
+
+// Details of one posting, read from its own page when a business card is opened.
+export type PostingDetails = {
+  url: string
+  title: string
+  summary: string
+  location?: string
+  employmentType?: string
+  postedAt?: string
 }
 
 export type SearchParams = {

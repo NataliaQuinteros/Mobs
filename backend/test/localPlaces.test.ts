@@ -5,7 +5,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { describe, expect, it, vi } from 'vitest'
 
 // In the temp folder: the backend keeps the database open, so Windows won't let us delete it afterwards.
-const dbPath = join(tmpdir(), 'mobs-local-places.test.db')
+const dbPath = join(tmpdir(), 'work-radar-local-places.test.db')
 rmSync(dbPath, { force: true })
 
 const db = new DatabaseSync(dbPath)

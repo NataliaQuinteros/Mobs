@@ -1,5 +1,8 @@
 import type { Business } from '../../shared/types.ts'
 
+// Relative to today, so the mock keeps showing a fresh advert, a stale one and an undated one.
+const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+
 export const mockBusinesses: Business[] = [
   {
     id: 'node/1',
@@ -16,8 +19,8 @@ export const mockBusinesses: Business[] = [
     lat: 46.532, lon: 6.571, distanceKm: 0.8,
     careersUrl: 'https://northwind.example/careers',
     postings: [
-      { title: 'Frontend Developer', url: 'https://northwind.example/careers/frontend', location: 'Madrid' },
-      { title: 'QA Engineer', url: 'https://northwind.example/careers/qa', location: 'Remote' },
+      { title: 'Frontend Developer', url: 'https://northwind.example/careers/frontend', location: 'Madrid', postedAt: daysAgo(3) },
+      { title: 'QA Engineer', url: 'https://northwind.example/careers/qa', location: 'Remote', postedAt: daysAgo(96) },
     ],
   },
   {

@@ -10,8 +10,8 @@ const DEFAULT_KEYWORDS = [
   'trabaja con nosotros,trabaje con nosotros,ofertas de empleo,oferta de empleo,empleo,empleos,vacantes,únete,unete', // Spanish
   'treballa amb nosaltres,ocupació,feina', // Catalan
   'trabalhe conosco,carreiras,emprego,vagas', // Portuguese
-  "nous rejoindre,offres d'emploi,offres d’emploi,offre d'emploi,recrutement,carrières,emplois", // French, both apostrophes
-  'karriere,stellenangebote,stellenanzeigen,jobangebote,mitarbeiter gesucht', // German
+  "nous rejoindre,offres d'emploi,offres d’emploi,offre d'emploi,postes vacants,poste vacant,postes à pourvoir,postes ouverts,recrutement,carrières,emplois,trouver des emplois", // French, both apostrophes
+  'karriere,stellenangebote,stellenanzeigen,jobangebote,mitarbeiter gesucht,jobs finden', // German
   'lavora con noi,opportunità di lavoro,offerte di lavoro,carriere,lavoro', // Italian
   'werken bij,vacature,vacatures', // Dutch
   'talent,talento,recursos humanos,work,trabajo', // vaguest: matched last on purpose
@@ -22,8 +22,11 @@ export const config = {
   maxRadiusKm: Number(env.MAX_RADIUS_KM ?? 10),
   maxSites: Number(env.MAX_SITES ?? 1000),
   siteTimeoutMs: Number(env.SITE_TIMEOUT_MS ?? 4000), // how long one business website gets to answer
-  userAgent: env.USER_AGENT ?? 'MobsJobSearch/0.1', // OpenStreetMap wants an app that identifies itself
-  scrapeUserAgent: env.SCRAPE_USER_AGENT ?? 'Mozilla/5.0 (compatible; MobsJobSearch/0.1)', // business sites often refuse unknown agents
+  renderJs: env.RENDER_JS !== 'false', // open careers pages in a browser when their job list needs JavaScript
+  renderTimeoutMs: Number(env.RENDER_TIMEOUT_MS ?? 10000),
+  renderConcurrency: Number(env.RENDER_CONCURRENCY ?? 4),
+  userAgent: env.USER_AGENT ?? 'WorkRadar/0.1', // OpenStreetMap wants an app that identifies itself
+  scrapeUserAgent: env.SCRAPE_USER_AGENT ?? 'Mozilla/5.0 (compatible; WorkRadar/0.1)', // business sites often refuse unknown agents
   // Local copy of the OpenStreetMap places, built by scripts/build-places.sh. Falls back to the Overpass API when missing.
   placesDb: env.PLACES_DB ?? 'C:/osm-data/places.db',
   overpassUrl: env.OVERPASS_URL ?? 'https://overpass-api.de/api/interpreter',

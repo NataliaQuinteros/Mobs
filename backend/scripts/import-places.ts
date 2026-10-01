@@ -2,7 +2,6 @@
 // Usage: npx tsx scripts/import-places.ts [path to places.geojsonseq]
 import { createReadStream } from 'node:fs'
 import { rm } from 'node:fs/promises'
-import { createInterface } from 'node:readline'
 import { DatabaseSync } from 'node:sqlite'
 import { config } from '../src/config.ts'
 import { parseWebsite, WEBSITE_TAGS } from '../src/places.ts'
@@ -21,31 +20,46 @@ let read = 0
 let kept = 0
 db.exec('BEGIN')
 
-for await (const line of createInterface({ input: createReadStream(source), crlfDelay: Infinity })) {
-  if (!line.trim()) continue
-  read++
-
-  const feature = JSON.parse(line.replace(/^\x1e/, '')) // geojsonseq separates records with 0x1e
-  const tags = feature.properties ?? {}
-  const website = parseWebsite(WEBSITE_TAGS.map((tag) => tags[tag]).find(Boolean))
-  const point = centreOf(feature.geometry)
-  if (!tags.name || !website || !point) continue
-
-  insert.run(feature.id ?? `${read}`, tags.name, point[1], point[0], website.href)
-  kept++
-
-  if (read % 500_000 === 0) {
-    db.exec('COMMIT')
-    db.exec('BEGIN')
-    console.log(`${read.toLocaleString()} read, ${kept.toLocaleString()} kept`)
-  }
+// Records are separated by 0x1e (RFC 8142) and may themselves contain newlines, so lines are not records.
+let pending = ''
+for await (const chunk of createReadStream(source, { encoding: 'utf8' })) {
+  const records = (pending + chunk).split('\x1e')
+  pending = records.pop() ?? ''
+  for (const record of records) addPlace(record)
 }
+addPlace(pending)
 
 db.exec('COMMIT')
 console.log('Indexing…')
 db.exec('CREATE INDEX places_lat_lon ON places (lat, lon)')
 db.close()
 console.log(`Done: ${kept.toLocaleString()} places in ${config.placesDb}`)
+
+function addPlace(record: string) {
+  if (!record.trim()) return
+  read++
+
+  let feature
+  try {
+    feature = JSON.parse(record)
+  } catch {
+    return // a record we can't read is not worth stopping an 11 GB import for
+  }
+
+  const tags = feature.properties ?? {}
+  const website = parseWebsite(WEBSITE_TAGS.map((tag: string) => tags[tag]).find(Boolean))
+  const point = centreOf(feature.geometry)
+  if (!tags.name || !website || !point) return
+
+  insert.run(feature.id ?? `${read}`, tags.name, point[1], point[0], website.href)
+  kept++
+
+  if (read % 1_000_000 === 0) {
+    db.exec('COMMIT')
+    db.exec('BEGIN')
+    console.log(`${read.toLocaleString()} read, ${kept.toLocaleString()} kept`)
+  }
+}
 
 // One representative coordinate per place: a point as-is, anything else averaged.
 function centreOf(geometry: { type: string; coordinates: unknown } | undefined): [number, number] | null {
